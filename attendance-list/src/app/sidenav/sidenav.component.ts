@@ -21,55 +21,51 @@ export class SidenavComponent implements OnInit {
 
   constructor(private userService: UserService) { }
 
-  ngOnInit(): void {
-    this.userService.isLoggedInUserInRole(UserRoles.admin).then(x => {
-      this.isAdmin = x;
-    }).catch(error => {
-      console.error(error);
-    });
+  async ngOnInit(): Promise<void> {
+    try {
+      const [isAdmin, isBFAUser, isGeoLocationUser, isFmUser] = await Promise.all([
+        this.userService.isLoggedInUserInRole(UserRoles.admin),
+        this.userService.isLoggedInUserInRole(UserRoles.bfaUser),
+        this.userService.isLoggedInUserInRole(UserRoles.geoTracking),
+        this.userService.isLoggedInUserInRole(UserRoles.fmUser),
+      ]);
 
-    this.userService.isLoggedInUserInRole(UserRoles.bfaUser).then(x => {
-      this.isBFAUser = x;
-    }).catch(error => {
+      this.isAdmin = isAdmin;
+      this.isBFAUser = isBFAUser || isAdmin;
+      this.isGeoLocationUser = isGeoLocationUser;
+      this.isFmUser = isFmUser || isAdmin;
+    } catch (error) {
       console.error(error);
-    });
-
-    this.userService.isLoggedInUserInRole(UserRoles.geoTracking).then(x => {
-      this.isGeoLocationUser = x;
-    }).catch(error => {
-      console.error(error);
-    });
-
-    this.userService.isLoggedInUserInRole(UserRoles.fmUser).then(x => {
-      this.isFmUser = x;
-    }).catch(error => {
-      console.error(error);
-    });
+    }
   }
 
 
   async logout() {
     Parse.User.logOut().then(() => {
-      window.open(environment.attendanceListBasePath + '/login', '_self');
+      window.location.assign(this.buildUrl(environment.attendanceListBasePath, 'login'));
     });
   }
 
   async openBfa() {
     const currentUser = await Parse.User.current().fetch();
-    window.open(environment.bfaAuthUrl + currentUser.getSessionToken(), '_self');
+    window.location.assign(environment.bfaAuthUrl + currentUser.getSessionToken());
   }
 
 
   async openFischmarkt() {
     const currentUser = await Parse.User.current().fetch();
-    window.open(environment.fischmarktAuthUrl + currentUser.getSessionToken(), '_self');
+    window.location.assign(environment.fischmarktAuthUrl + currentUser.getSessionToken());
   }
 
   openSingBook() {
-    window.open(environment.attendanceListBasePath + '/assets/2022_Liederbuch_4_Auflage_print.pdf')
+    window.open(this.buildUrl(environment.attendanceListBasePath, 'assets/2022_Liederbuch_4_Auflage_print.pdf'))
   }
 
   onClick() {
     this.closeNav.emit(null);
+  }
+
+  private buildUrl(basePath: string, path: string) {
+    return `${basePath.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   }
 }

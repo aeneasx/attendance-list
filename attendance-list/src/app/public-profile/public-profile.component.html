@@ -51,7 +51,7 @@
                         <div matListItemLine *ngIf="!stv.status">Kein Status</div>
                     </mat-list-item>
                 </div>
-                <div *ngIf="userRoles && userRoles.length > 0">
+                <div *ngIf="userRoles">
                     <div mat-subheader>Rollen</div>
 
                     @for (role of userRoles; track role) {
@@ -62,13 +62,17 @@
                         </div>
                     </mat-list-item>
                     }
+                    <mat-list-item *ngIf="userRoles.length === 0">
+                        <mat-icon matListItemIcon>assignment_ind</mat-icon>
+                        <div matListItemTitle>Keine Rollen</div>
+                    </mat-list-item>
                 </div>
             </mat-list>
             <mat-card-actions *ngIf="isAdmin">
                 <button mat-icon-button (click)="changePassword()">
                     <mat-icon>edit</mat-icon>
                 </button>
-                <button mat-flat-button color="primary" *ngIf="userRoles && userRoles.length > 0" (click)="addRoleToUser()">
+                <button mat-flat-button color="primary" *ngIf="userRoles" (click)="addRoleToUser()">
                     Rolle hinzufügen
                 </button>
                 <button mat-icon-button *ngIf="!profileIsfromCurrentUser" color="warn" (click)="deleteUser()">
@@ -77,6 +81,35 @@
             </mat-card-actions>
         </mat-card>
     </div>
+
+    <mat-card *ngIf="isAdmin && userRoles">
+        <mat-list role="list">
+            <div mat-subheader>App-Zugriff</div>
+
+            @for (app of appAccess; track app.key) {
+            <mat-list-item>
+                <mat-icon matListItemIcon>{{app.icon}}</mat-icon>
+                <div matListItemTitle>{{app.title}}</div>
+                <div matListItemLine>
+                    {{hasRole(app.userRole) ? 'Freigeschaltet' : 'Kein Zugriff'}}
+                    <span *ngIf="app.adminRole && hasRole(app.adminRole)"> - Admin</span>
+                </div>
+                <button mat-stroked-button color="primary" *ngIf="!hasRole(app.userRole)"
+                    (click)="enableAppAccess(app)">
+                    Freischalten
+                </button>
+                <button mat-stroked-button color="primary" *ngIf="app.adminRole && hasRole(app.userRole) && !hasRole(app.adminRole)"
+                    (click)="enableAppAccess(app, true)">
+                    Admin
+                </button>
+                <button mat-icon-button color="warn" *ngIf="hasRole(app.userRole)"
+                    (click)="disableAppAccess(app)">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </mat-list-item>
+            }
+        </mat-list>
+    </mat-card>
 
     <mat-card style="margin-top: 1rem;" *ngIf="!hideLocation">
         <mat-list role="list">

@@ -30,6 +30,29 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
   @ViewChild('lMap') mapElRef: ElementRef;
   hideLocation = true;
   userRoles?: string[];
+  assignableRoles: string[] = [];
+  appAccess = [
+    {
+      key: 'bfa',
+      title: 'BFA',
+      icon: 'icecream',
+      userRole: UserRoles.bfaUser,
+      adminRole: UserRoles.bfaAdmin
+    },
+    {
+      key: 'fm',
+      title: 'Fischmarkt',
+      icon: 'sailing',
+      userRole: UserRoles.fmUser,
+      adminRole: UserRoles.fmAdmin
+    },
+    {
+      key: 'geo',
+      title: 'Geo Tracking',
+      icon: 'map',
+      userRole: UserRoles.geoTracking
+    }
+  ];
 
   constructor(private route: ActivatedRoute,
     private snackbar: MatSnackBar,
@@ -71,6 +94,7 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
             this.stv = this.userService.getStellvertreterUserStatus(this.currentUserStatus.user);
 
             this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+            this.assignableRoles = await Parse.Cloud.run('getAssignableRoles');
 
             await this.initLocationMap();
           }
@@ -233,15 +257,17 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
   }
 
   async addRoleToUser() {
-
-
-    const query = new Parse.Query('_Role');
-    const roles = await query.find();
-
-    const roleNames = roles.map(x => x.get('name'));
-    const filteredRoles = roleNames.filter(x => !this.userRoles.includes(x));
+    const roleNames = this.assignableRoles.length > 0 ? this.assignableRoles : await Parse.Cloud.run('getAssignableRoles');
+    const filteredRoles = roleNames.filter(x => !(this.userRoles || []).includes(x));
     const inputOptionsMap = new Map();
     filteredRoles.forEach(x => inputOptionsMap.set(x, x));
+
+    if (filteredRoles.length === 0) {
+      this.snackbar.open('Alle Rollen sind bereits vergeben.', null, {
+        duration: 2000
+      });
+      return;
+    }
 
     Swal.fire({
       title: 'Rolle hinzufügen',
@@ -266,6 +292,91 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  hasRole(roleName: string) {
+    return this.userRoles?.includes(roleName) === true;
+  }
+
+  async setRole(roleName: string, enabled: boolean) {
+    if (!this.currentUserStatus?.user || !roleName) {
+      return;
+    }
+
+    try {
+      if (enabled) {
+        await Parse.Cloud.run('addUserToRole', { roleName, userId: this.currentUserStatus.user.id });
+      } else {
+        await Parse.Cloud.run('removeRoleFromUser', { roleName, userId: this.currentUserStatus.user.id });
+      }
+      this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+      this.snackbar.open('Rollen aktualisiert.', null, {
+        duration: 2000
+      });
+    } catch (err) {
+      console.error(err);
+      this.snackbar.open('Rolle konnte nicht aktualisiert werden.', null, {
+        duration: 3000
+      });
+    }
+  }
+
+  async enableAppAccess(app: any, asAdmin = false) {
+    if (!this.currentUserStatus?.user) {
+      return;
+    }
+
+    try {
+      await Parse.Cloud.run('addUserToRole', {
+        roleName: app.userRole,
+        userId: this.currentUserStatus.user.id
+      });
+      if (asAdmin && app.adminRole) {
+        await Parse.Cloud.run('addUserToRole', {
+          roleName: app.adminRole,
+          userId: this.currentUserStatus.user.id
+        });
+      }
+      this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+      this.snackbar.open(`${app.title} wurde freigeschaltet.`, null, {
+        duration: 2500
+      });
+    } catch (err) {
+      console.error(err);
+      this.snackbar.open(`${app.title} konnte nicht freigeschaltet werden.`, null, {
+        duration: 3000
+      });
+    }
+  }
+
+  async disableAppAccess(app: any) {
+    if (!this.currentUserStatus?.user) {
+      return;
+    }
+
+    try {
+      if (app.adminRole && this.hasRole(app.adminRole)) {
+        await Parse.Cloud.run('removeRoleFromUser', {
+          roleName: app.adminRole,
+          userId: this.currentUserStatus.user.id
+        });
+      }
+      if (this.hasRole(app.userRole)) {
+        await Parse.Cloud.run('removeRoleFromUser', {
+          roleName: app.userRole,
+          userId: this.currentUserStatus.user.id
+        });
+      }
+      this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+      this.snackbar.open(`${app.title} wurde deaktiviert.`, null, {
+        duration: 2500
+      });
+    } catch (err) {
+      console.error(err);
+      this.snackbar.open(`${app.title} konnte nicht deaktiviert werden.`, null, {
+        duration: 3000
+      });
+    }
   }
 
   async changePassword() {

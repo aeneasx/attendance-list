@@ -7,17 +7,28 @@ const phoneNumberRegex =
 
 Parse.Cloud.define('getRolesFromUser', async request => {
   const userId = request.params.userId;
-  if (request.user && isUserIdInRole(request.user.id, 'admin') && userId) {
+  if (request.user && await isUserIdInRole(request.user.id, 'admin') && userId) {
     return await getRolesFromUser(userId);
   } else {
     return [];
   }
 });
 
+Parse.Cloud.define('getAssignableRoles', async request => {
+  if (!request.user || !(await isUserIdInRole(request.user.id, 'admin'))) {
+    return [];
+  }
+
+  const query = new Parse.Query('_Role');
+  query.ascending('name');
+  const roles = await query.find({ useMasterKey: true });
+  return roles.map(role => role.get('name'));
+});
+
 Parse.Cloud.define('addUserToRole', async request => {
   const roleName = request.params.roleName;
   const userId = request.params.userId;
-  if (request.user && isUserIdInRole(request.user.id, 'admin')
+  if (request.user && await isUserIdInRole(request.user.id, 'admin')
     && userId && roleName) {
     await addUser2Role(roleName, await getUserById(userId));
     return true;
@@ -29,7 +40,7 @@ Parse.Cloud.define('addUserToRole', async request => {
 Parse.Cloud.define('removeRoleFromUser', async request => {
   const roleName = request.params.roleName;
   const userId = request.params.userId;
-  if (request.user && isUserIdInRole(request.user.id, 'admin')
+  if (request.user && await isUserIdInRole(request.user.id, 'admin')
     && userId && roleName) {
     await removeRoleFromUser(roleName, await getUserById(userId));
     return true;
@@ -40,8 +51,8 @@ Parse.Cloud.define('removeRoleFromUser', async request => {
 
 Parse.Cloud.define('deleteUser', async request => {
   const userId2Delete = request.params.user2delete;
-  if (request.user && isUserIdInRole(request.user.id, 'admin') && userId2Delete) {
-    const query = new Parse.Query('User');
+  if (request.user && await isUserIdInRole(request.user.id, 'admin') && userId2Delete) {
+    const query = new Parse.Query('_User');
     query.equalTo('objectId', userId2Delete);
     const user2Delete = await query.first({ useMasterKey: true });
 
@@ -55,8 +66,8 @@ Parse.Cloud.define('deleteUser', async request => {
 Parse.Cloud.define('changePassword', async request => {
   const userId = request.params.userId;
   const newPassword = request.params.newPassword;
-  if (request.user && isUserIdInRole(request.user.id, 'admin') && userId && newPassword) {
-    const query = new Parse.Query('User');
+  if (request.user && await isUserIdInRole(request.user.id, 'admin') && userId && newPassword) {
+    const query = new Parse.Query('_User');
     query.equalTo('objectId', userId);
     const user2Delete = await query.first({ useMasterKey: true });
 
@@ -71,8 +82,8 @@ Parse.Cloud.define('changePassword', async request => {
 Parse.Cloud.define('setStatus', async request => {
   const userId = request.params.userId;
   const newStatusId = request.params.newStatusId;
-  if (request.user && isUserIdInRole(request.user.id, 'admin') && userId && newStatusId) {
-    const query = new Parse.Query('User');
+  if (request.user && await isUserIdInRole(request.user.id, 'admin') && userId && newStatusId) {
+    const query = new Parse.Query('_User');
     query.equalTo('objectId', userId);
     const user2Update = await query.first({ useMasterKey: true });
 
@@ -208,8 +219,9 @@ async function getUserById(fishTypeId) {
 }
 
 Parse.Cloud.define('getFishRanking', async request => {
-  const isUserAlreadyInRole = await isUserInRole(request.object, 'fm-user');
-  if (!isUserAlreadyInRole) {
+  const isAllowed = request.user &&
+    (await isUserIdInRole(request.user.id, 'fm-user') || await isUserIdInRole(request.user.id, 'admin'));
+  if (isAllowed) {
     const GameScore = Parse.Object.extend('FM_Aquarium');
     const query = new Parse.Query(GameScore);
     query.equalTo('approved', true);
@@ -258,7 +270,8 @@ Parse.Cloud.afterSave('locationStatus', async request => {
 
 Parse.Cloud.define('resetBfaSaldo', async request => {
   const userId = request.params.userId;
-  const allowedRole = isUserIdInRole(request.user.id, 'admin') || isUserIdInRole(request.user.id, 'bfa-admin');
+  const allowedRole = request.user &&
+    (await isUserIdInRole(request.user.id, 'admin') || await isUserIdInRole(request.user.id, 'bfa-admin'));
   if (!request.user || !allowedRole || !userId) {
     throw 'User is not authorized to reset saldo.';
   }
@@ -291,7 +304,10 @@ function groupFishies(xs, key) {
 async function addUser2Role(roleName, userObject) {
   const query = new Parse.Query('_Role');
   query.equalTo('name', roleName);
-  const userRole = await query.first();
+  const userRole = await query.first({ useMasterKey: true });
+  if (!userRole) {
+    throw `Role "${roleName}" does not exist.`;
+  }
 
   const relation = userRole.relation('users');
   relation.add(userObject);
@@ -301,7 +317,10 @@ async function addUser2Role(roleName, userObject) {
 async function removeRoleFromUser(roleName, userObject) {
   const query = new Parse.Query('_Role');
   query.equalTo('name', roleName);
-  const userRole = await query.first();
+  const userRole = await query.first({ useMasterKey: true });
+  if (!userRole) {
+    throw `Role "${roleName}" does not exist.`;
+  }
 
   const relation = userRole.relation('users');
   relation.remove(userObject);
@@ -309,10 +328,14 @@ async function removeRoleFromUser(roleName, userObject) {
 }
 
 async function isUserInRole(user, roleName) {
-  return isUserIdInRole(user, roleName);
+  return isUserIdInRole(typeof user === 'string' ? user : user?.id, roleName);
 }
 
 async function isUserIdInRole(userId, roleName) {
+  if (!userId || !roleName) {
+    return false;
+  }
+
   const User = Parse.Object.extend('_User');
   const Role = Parse.Object.extend('_Role');
 
