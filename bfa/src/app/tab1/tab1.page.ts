@@ -31,7 +31,11 @@ export class Tab1Page {
     this.products = productService.allProducts;
     this.searchString = '';
     this.filterProducts();
-    UserService.isUserInRole(Parse.User.current(), 'bfa-admin').then(x => this.isBfaAdmin = x);
+    Promise.all([
+      UserService.isUserInRole(Parse.User.current(), 'admin'),
+      UserService.isUserInRole(Parse.User.current(), 'user'),
+      UserService.isUserInRole(Parse.User.current(), 'bfa-admin')
+    ]).then(([isAdmin, isUser, isBfaAdmin]) => this.isBfaAdmin = isAdmin || isUser || isBfaAdmin);
   }
 
   filterProducts() {

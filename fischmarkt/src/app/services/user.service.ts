@@ -19,7 +19,24 @@ export class UserService {
     return await this.isUserInRole((await Parse.User.current().fetch()), roleName);
   }
 
+  async isLoggedInUserInAnyRole(roleNames: string[]) {
+    const currentUser = await Parse.User.current()?.fetch();
+    return await this.isUserInAnyRole(currentUser, roleNames);
+  }
+
+  async isUserInAnyRole(user: any, roleNames: string[]) {
+    for (const roleName of roleNames) {
+      if (await this.isUserInRole(user, roleName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   async isUserInRole(user: any, roleName: string) {
+    if (!user || !roleName) {
+      return false;
+    }
 
     const User = Parse.Object.extend('_User');
     const Role = Parse.Object.extend('_Role');

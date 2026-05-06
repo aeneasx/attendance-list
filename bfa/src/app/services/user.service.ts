@@ -9,6 +9,10 @@ export class UserService {
   constructor() { }
 
   static async isUserInRole(user: any, roleName: string) {
+    if (!user || !roleName) {
+      return false;
+    }
+
     const User = Parse.Object.extend('_User');
     const Role = Parse.Object.extend('_Role');
 
@@ -22,6 +26,15 @@ export class UserService {
     const comments = await query.find();
 
     return comments ? comments.length > 0 : false;
+  }
+
+  async isUserInAnyRole(user: any, roleNames: string[]) {
+    for (const roleName of roleNames) {
+      if (await UserService.isUserInRole(user, roleName)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async getAllUsers() {
@@ -48,6 +61,11 @@ export class UserService {
 
   async isLoggedInUserInRole(roleName: string) {
     return await UserService.isUserInRole((await Parse.User.current().fetch()), roleName);
+  }
+
+  async isLoggedInUserInAnyRole(roleNames: string[]) {
+    const currentUser = await Parse.User.current()?.fetch();
+    return await this.isUserInAnyRole(currentUser, roleNames);
   }
 
 

@@ -20,7 +20,7 @@ export class TabsPage {
       }
     });
 
-    this.userService.isLoggedInUserInRole('bfa-admin').then(x => this.isAdmin = x);
+    this.userService.isLoggedInUserInAnyRole(['admin', 'user', 'bfa-admin']).then(x => this.isAdmin = x);
   }
 
 }

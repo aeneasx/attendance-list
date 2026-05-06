@@ -31,26 +31,24 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
   hideLocation = true;
   userRoles?: string[];
   assignableRoles: string[] = [];
-  appAccess = [
+  accessLevels = [
     {
-      key: 'bfa',
-      title: 'BFA',
-      icon: 'icecream',
-      userRole: UserRoles.bfaUser,
-      adminRole: UserRoles.bfaAdmin
+      role: UserRoles.admin,
+      title: 'Admin',
+      icon: 'admin_panel_settings',
+      description: 'Vollzugriff auf Attendance List, BFA, Fischmarkt und Benutzerverwaltung.'
     },
     {
-      key: 'fm',
-      title: 'Fischmarkt',
-      icon: 'sailing',
-      userRole: UserRoles.fmUser,
-      adminRole: UserRoles.fmAdmin
+      role: UserRoles.user,
+      title: 'User',
+      icon: 'edit',
+      description: 'Darf Clients hinzufügen und BFA/Fischmarkt fachlich bearbeiten.'
     },
     {
-      key: 'geo',
-      title: 'Geo Tracking',
-      icon: 'map',
-      userRole: UserRoles.geoTracking
+      role: UserRoles.client,
+      title: 'Client',
+      icon: 'person',
+      description: 'Einfacher Zugriff auf Attendance List, BFA und Fischmarkt.'
     }
   ];
 
@@ -374,6 +372,38 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error(err);
       this.snackbar.open(`${app.title} konnte nicht deaktiviert werden.`, null, {
+        duration: 3000
+      });
+    }
+  }
+
+  async setAccessLevel(roleName: string) {
+    if (!this.currentUserStatus?.user || !roleName) {
+      return;
+    }
+
+    try {
+      for (const role of [UserRoles.admin, UserRoles.user, UserRoles.client]) {
+        if (this.hasRole(role)) {
+          await Parse.Cloud.run('removeRoleFromUser', {
+            roleName: role,
+            userId: this.currentUserStatus.user.id
+          });
+        }
+      }
+
+      await Parse.Cloud.run('addUserToRole', {
+        roleName,
+        userId: this.currentUserStatus.user.id
+      });
+
+      this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+      this.snackbar.open('Zugriffslevel aktualisiert.', null, {
+        duration: 2500
+      });
+    } catch (err) {
+      console.error(err);
+      this.snackbar.open('Zugriffslevel konnte nicht aktualisiert werden.', null, {
         duration: 3000
       });
     }

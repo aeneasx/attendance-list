@@ -54,6 +54,8 @@ export class BasketService {
       acl.setReadAccess(currentUser.id, true);
       acl.setRoleWriteAccess('admin', true);
       acl.setRoleReadAccess('admin', true);
+      acl.setRoleWriteAccess('user', true);
+      acl.setRoleReadAccess('user', true);
       acl.setRoleWriteAccess('bfa-admin', true);
       acl.setRoleReadAccess('bfa-admin', true);
 

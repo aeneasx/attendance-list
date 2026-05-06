@@ -35,10 +35,8 @@ export class AppComponent {
 
       this.currentUser = await Parse.User.current();
       if (!this.currentUser) {
-        if (!location.pathname.includes('/login') && !location.pathname.includes('/auth')) {
-          window.location.assign(environment.attendanceListUrl);
-          return;
-        }
+        this.showLoader = false;
+        return;
       } else {
         this.currentUser = await Parse.User.current().fetch();
       }

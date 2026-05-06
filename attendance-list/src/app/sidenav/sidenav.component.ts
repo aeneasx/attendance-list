@@ -23,17 +23,20 @@ export class SidenavComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      const [isAdmin, isBFAUser, isGeoLocationUser, isFmUser] = await Promise.all([
+      const [isAdmin, isUser, isClient, isBFAUser, isGeoLocationUser, isFmUser] = await Promise.all([
         this.userService.isLoggedInUserInRole(UserRoles.admin),
+        this.userService.isLoggedInUserInRole(UserRoles.user),
+        this.userService.isLoggedInUserInRole(UserRoles.client),
         this.userService.isLoggedInUserInRole(UserRoles.bfaUser),
         this.userService.isLoggedInUserInRole(UserRoles.geoTracking),
         this.userService.isLoggedInUserInRole(UserRoles.fmUser),
       ]);
 
+      const hasBaseAppAccess = isAdmin || isUser || isClient;
       this.isAdmin = isAdmin;
-      this.isBFAUser = isBFAUser || isAdmin;
+      this.isBFAUser = isBFAUser || hasBaseAppAccess;
       this.isGeoLocationUser = isGeoLocationUser;
-      this.isFmUser = isFmUser || isAdmin;
+      this.isFmUser = isFmUser || hasBaseAppAccess;
     } catch (error) {
       console.error(error);
     }

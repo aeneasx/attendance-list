@@ -21,8 +21,7 @@ export class CanActivateAuthenticated  {
           return;
         }
 
-        const isAllowed = await this.userService.isUserInRole(currentUser, FMConstants.UserRole) ||
-          await this.userService.isUserInRole(currentUser, 'admin');
+        const isAllowed = await this.userService.isUserInAnyRole(currentUser, ['admin', 'user', 'client', FMConstants.UserRole]);
         if (!isAllowed) {
           window.location.assign(environment.attendanceListUrl ?? '/auth');
           resolve(false);

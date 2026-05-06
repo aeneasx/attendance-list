@@ -22,7 +22,7 @@ export class AntraegeService {
 
   private async initializeService() {
     if (this.userIsAdmin == undefined) {
-      this.userIsAdmin = await this.userService.isLoggedInUserInRole(FMConstants.AdminRole);
+      this.userIsAdmin = await this.userService.isLoggedInUserInAnyRole(['admin', 'user', FMConstants.AdminRole]);
     }
   }
 
@@ -97,6 +97,8 @@ export class AntraegeService {
     acl.setReadAccess(currentUser.id, true);
     acl.setRoleWriteAccess('admin', true);
     acl.setRoleReadAccess('admin', true);
+    acl.setRoleWriteAccess('user', true);
+    acl.setRoleReadAccess('user', true);
     acl.setRoleWriteAccess('fm-admin', true);
     acl.setRoleReadAccess('fm-admin', true);
 

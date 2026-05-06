@@ -1,10 +1,12 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { CanActivateAuthenticated } from './guards/authenticated.guard';
 
 const routes: Routes = [
   {
     path: '',
-    loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule)
+    loadChildren: () => import('./tabs/tabs.module').then(m => m.TabsPageModule),
+    canActivate: [CanActivateAuthenticated]
   },
   {
     path: 'login',
@@ -16,11 +18,13 @@ const routes: Routes = [
   },
   {
     path: 'scanner',
-    loadChildren: () => import('./scanner/scanner.module').then( m => m.ScannerPageModule)
+    loadChildren: () => import('./scanner/scanner.module').then( m => m.ScannerPageModule),
+    canActivate: [CanActivateAuthenticated]
   },
   {
     path: 'order/:orderId',
-    loadChildren: () => import('./order-overview/order-overview.module').then( m => m.OrderOverviewPageModule)
+    loadChildren: () => import('./order-overview/order-overview.module').then( m => m.OrderOverviewPageModule),
+    canActivate: [CanActivateAuthenticated]
   }
 ];
 @NgModule({

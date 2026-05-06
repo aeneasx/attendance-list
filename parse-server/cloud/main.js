@@ -122,11 +122,14 @@ Parse.Cloud.beforeSave('_User', async request => {
     acl.setPublicReadAccess(true);
     acl.setPublicWriteAccess(false);
 
-    acl.setWriteAccess('admin', true);
-    acl.setReadAccess('admin', true);
+    acl.setRoleWriteAccess('admin', true);
+    acl.setRoleReadAccess('admin', true);
 
-    acl.setWriteAccess('user', false);
-    acl.setReadAccess('user', true);
+    acl.setRoleWriteAccess('user', true);
+    acl.setRoleReadAccess('user', true);
+
+    acl.setRoleWriteAccess('client', false);
+    acl.setRoleReadAccess('client', true);
     request.object.setACL(acl);
 
     console.log('Setting default permitions for user with id ' + request.object.id + '.');
@@ -144,11 +147,9 @@ Parse.Cloud.afterSave('_User', async request => {
     relation.add(request.object);
     await userRole.save(null, { useMasterKey: true });
 
-    await addUser2Role('bfa-user', request.object);
-    await addUser2Role('fm-user', request.object);
-    await addUser2Role('geo-tracking', request.object);
+    await addUser2Role('client', request.object);
 
-    console.log('Added user with id ' + request.object.id + ' to role user and bfa-user.');
+    console.log('Added user with id ' + request.object.id + ' to role client.');
   }
 });
 
@@ -220,7 +221,10 @@ async function getUserById(fishTypeId) {
 
 Parse.Cloud.define('getFishRanking', async request => {
   const isAllowed = request.user &&
-    (await isUserIdInRole(request.user.id, 'fm-user') || await isUserIdInRole(request.user.id, 'admin'));
+    (await isUserIdInRole(request.user.id, 'client') ||
+      await isUserIdInRole(request.user.id, 'user') ||
+      await isUserIdInRole(request.user.id, 'fm-user') ||
+      await isUserIdInRole(request.user.id, 'admin'));
   if (isAllowed) {
     const GameScore = Parse.Object.extend('FM_Aquarium');
     const query = new Parse.Query(GameScore);
@@ -271,7 +275,9 @@ Parse.Cloud.afterSave('locationStatus', async request => {
 Parse.Cloud.define('resetBfaSaldo', async request => {
   const userId = request.params.userId;
   const allowedRole = request.user &&
-    (await isUserIdInRole(request.user.id, 'admin') || await isUserIdInRole(request.user.id, 'bfa-admin'));
+    (await isUserIdInRole(request.user.id, 'admin') ||
+      await isUserIdInRole(request.user.id, 'user') ||
+      await isUserIdInRole(request.user.id, 'bfa-admin'));
   if (!request.user || !allowedRole || !userId) {
     throw 'User is not authorized to reset saldo.';
   }
@@ -304,9 +310,15 @@ function groupFishies(xs, key) {
 async function addUser2Role(roleName, userObject) {
   const query = new Parse.Query('_Role');
   query.equalTo('name', roleName);
-  const userRole = await query.first({ useMasterKey: true });
+  let userRole = await query.first({ useMasterKey: true });
   if (!userRole) {
-    throw `Role "${roleName}" does not exist.`;
+    const acl = new Parse.ACL();
+    acl.setPublicReadAccess(true);
+    acl.setPublicWriteAccess(false);
+    acl.setRoleWriteAccess('admin', true);
+    acl.setRoleReadAccess('admin', true);
+    userRole = new Parse.Role(roleName, acl);
+    await userRole.save(null, { useMasterKey: true });
   }
 
   const relation = userRole.relation('users');
@@ -319,7 +331,7 @@ async function removeRoleFromUser(roleName, userObject) {
   query.equalTo('name', roleName);
   const userRole = await query.first({ useMasterKey: true });
   if (!userRole) {
-    throw `Role "${roleName}" does not exist.`;
+    return;
   }
 
   const relation = userRole.relation('users');
