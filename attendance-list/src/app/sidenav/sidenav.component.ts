@@ -3,6 +3,7 @@ import * as Parse from 'parse';
 import { UserService } from '../services/user.service';
 import { UserRoles } from '../entities/user-roles';
 import { environment } from 'src/environments/environment';
+import { PermissionService } from '../services/permission.service';
 
 
 @Component({
@@ -15,28 +16,23 @@ export class SidenavComponent implements OnInit {
   @Output()
   closeNav = new EventEmitter();
   isAdmin: boolean;
-  isBFAUser = false;
-  isFmUser = false;
+  canUseApps = false;
   isGeoLocationUser = false;
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService,
+    private permissionService: PermissionService) { }
 
   async ngOnInit(): Promise<void> {
     try {
-      const [isAdmin, isUser, isClient, isBFAUser, isGeoLocationUser, isFmUser] = await Promise.all([
-        this.userService.isLoggedInUserInRole(UserRoles.admin),
-        this.userService.isLoggedInUserInRole(UserRoles.user),
-        this.userService.isLoggedInUserInRole(UserRoles.client),
-        this.userService.isLoggedInUserInRole(UserRoles.bfaUser),
+      const [isAdmin, canUseApps, isGeoLocationUser] = await Promise.all([
+        this.permissionService.canAdmin(),
+        this.permissionService.canUseApps(),
         this.userService.isLoggedInUserInRole(UserRoles.geoTracking),
-        this.userService.isLoggedInUserInRole(UserRoles.fmUser),
       ]);
 
-      const hasBaseAppAccess = isAdmin || isUser || isClient;
       this.isAdmin = isAdmin;
-      this.isBFAUser = isBFAUser || hasBaseAppAccess;
+      this.canUseApps = canUseApps;
       this.isGeoLocationUser = isGeoLocationUser;
-      this.isFmUser = isFmUser || hasBaseAppAccess;
     } catch (error) {
       console.error(error);
     }
@@ -50,14 +46,12 @@ export class SidenavComponent implements OnInit {
   }
 
   async openBfa() {
-    const currentUser = await Parse.User.current().fetch();
-    window.location.assign(environment.bfaAuthUrl + currentUser.getSessionToken());
+    await this.permissionService.openBfa();
   }
 
 
   async openFischmarkt() {
-    const currentUser = await Parse.User.current().fetch();
-    window.location.assign(environment.fischmarktAuthUrl + currentUser.getSessionToken());
+    await this.permissionService.openFischmarkt();
   }
 
   openSingBook() {

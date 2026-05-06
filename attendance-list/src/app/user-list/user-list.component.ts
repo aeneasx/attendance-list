@@ -3,6 +3,7 @@ import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
 import { TreeNode } from '../entities/userData';
 import { UserService } from '../services/user.service';
+import { PermissionService } from '../services/permission.service';
 
 
 const nodeData = [
@@ -34,14 +35,25 @@ export class UserListComponent {
 
   treeControl = new NestedTreeControl<TreeNode>(node => node.children);
   dataSource = new MatTreeNestedDataSource<TreeNode>();
+  canUseApps = false;
 
-  constructor(private userService: UserService) {
+  constructor(private userService: UserService,
+    private permissionService: PermissionService) {
 
     this.userService.userSubject.subscribe(data => {
       this.dataSource.data = data;
     });
+    this.permissionService.canUseApps().then(x => this.canUseApps = x);
   }
 
   hasChild = (_: number, node: TreeNode) => !!node.children && node.children.length > 0;
+
+  openBfa() {
+    this.permissionService.openBfa();
+  }
+
+  openFischmarkt() {
+    this.permissionService.openFischmarkt();
+  }
 
 }

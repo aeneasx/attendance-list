@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="openAttendanceList()">
+      <ion-button (click)="openAttendanceList()" aria-label="Zur Attendance List">
         <ion-icon slot="start" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -9,10 +9,10 @@
       Produkte
     </ion-title>
     <ion-buttons slot="primary">
-      <ion-button *ngIf="isBfaAdmin" (click)="addProduct()">
+      <ion-button *ngIf="isBfaAdmin" (click)="addProduct()" aria-label="Produkt hinzufügen">
         <ion-icon name="add-outline" slot="icon-only"></ion-icon>
       </ion-button>
-      <ion-button routerLink="/scanner" *ngIf="android">
+      <ion-button routerLink="/scanner" *ngIf="android" aria-label="Barcode scannen">
         <ion-icon slot="icon-only" name="scan-circle-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -28,7 +28,7 @@
     </ion-toolbar>
     <ion-toolbar>
       <ion-buttons slot="primary">
-        <ion-button routerLink="/scanner">
+        <ion-button routerLink="/scanner" aria-label="Barcode scannen">
           <ion-icon slot="icon-only" name="scan-circle-outline"></ion-icon>
         </ion-button>
       </ion-buttons>

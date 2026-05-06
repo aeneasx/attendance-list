@@ -9,6 +9,7 @@ import { DepartmentService } from '../services/department.service';
 import Swal from 'sweetalert2';
 import { StatusService } from '../services/status.service';
 import { GeolocationService } from '../services/geo-location.service';
+import { PermissionService } from '../services/permission.service';
 import * as L from 'leaflet';
 @Component({
   selector: 'app-public-profile',
@@ -59,6 +60,7 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
     private departmentService: DepartmentService,
     private statusService: StatusService,
     private readonly geoService: GeolocationService,
+    private permissionService: PermissionService,
     private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
@@ -87,7 +89,7 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
                 this.currentDepartment = dept.find(x => x.id === this.currentUserStatus.user.attributes.department.id);
               }
             });
-            this.userService.isLoggedInUserInRole(UserRoles.admin).then(res => this.isAdmin = res);
+            this.permissionService.canAdmin().then(res => this.isAdmin = res);
             this.profileIsfromCurrentUser = currentLoggedInUser.id === this.currentUserStatus.user.id;
             this.stv = this.userService.getStellvertreterUserStatus(this.currentUserStatus.user);
 

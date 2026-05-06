@@ -4,10 +4,10 @@
       Anträge
     </ion-title>
     <ion-buttons slot="primary">
-      <ion-button (click)="openDecisionBoard()" *ngIf="antraegeService.userIsAdmin">
+      <ion-button (click)="openDecisionBoard()" *ngIf="antraegeService.userIsAdmin" aria-label="Anträge bearbeiten">
         <ion-icon slot="end" name="play-outline"></ion-icon>
       </ion-button>
-      <ion-button routerLink="/antrag">
+      <ion-button routerLink="/antrag" aria-label="Antrag erstellen">
         <ion-icon slot="icon-only" name="add-outline"></ion-icon>
       </ion-button>
     </ion-buttons>

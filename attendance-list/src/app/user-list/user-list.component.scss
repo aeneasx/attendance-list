@@ -1,6 +1,17 @@
 .example-tree-invisible {
     display: none;
   }
+
+  .quick-links {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0;
+    flex-wrap: wrap;
+  }
+
+  .quick-links button {
+    min-width: 8rem;
+  }
   
   .example-tree ul,
   .example-tree li {

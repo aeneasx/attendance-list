@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { LoadingController } from '@ionic/angular';
 import * as Parse from 'parse';
 import { BehaviorSubject } from 'rxjs';
-import { FMConstants } from '../constants';
-import { UserService } from './user.service';
+import { PermissionService } from './permission.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,12 +16,12 @@ export class AntraegeService {
   public userFishes: any[];
   public userPoints: number = 0;
 
-  constructor(private userService: UserService,
+  constructor(private permissionService: PermissionService,
     private loadingController: LoadingController) { }
 
   private async initializeService() {
     if (this.userIsAdmin == undefined) {
-      this.userIsAdmin = await this.userService.isLoggedInUserInAnyRole(['admin', 'user', FMConstants.AdminRole]);
+      this.userIsAdmin = await this.permissionService.canManageFischmarkt();
     }
   }
 

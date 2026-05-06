@@ -1,29 +1,27 @@
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree } from "@angular/router";
+import { ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from "@angular/router";
 import { Observable } from "rxjs";
 import * as Parse from 'parse';
 import { Injectable } from "@angular/core";
-import { environment } from "src/environments/environment";
-import { UserService } from "../services/user.service";
-import { FMConstants } from "../constants";
+import { PermissionService } from "../services/permission.service";
 
 @Injectable()
 export class CanActivateAuthenticated  {
 
-  constructor(private router: Router, private userService: UserService) { }
+  constructor(private permissionService: PermissionService) { }
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree | Observable<boolean | UrlTree> | Promise<boolean | UrlTree> {
     return new Promise(async (resolve) => {
       try {
         const currentUser = await Parse.User.current()?.fetch();
         if (!currentUser) {
-          window.location.assign(environment.attendanceListUrl ?? '/auth');
+          await this.permissionService.redirectToAttendance();
           resolve(false);
           return;
         }
 
-        const isAllowed = await this.userService.isUserInAnyRole(currentUser, ['admin', 'user', 'client', FMConstants.UserRole]);
+        const isAllowed = await this.permissionService.canUseFischmarkt(currentUser);
         if (!isAllowed) {
-          window.location.assign(environment.attendanceListUrl ?? '/auth');
+          await this.permissionService.redirectToAttendance();
           resolve(false);
           return;
         }
@@ -31,8 +29,9 @@ export class CanActivateAuthenticated  {
         resolve(true);
       } catch (ex) {
         console.error(ex);
-        resolve(this.router.parseUrl('/'));
-        Parse.User.logOut();
+        await Parse.User.logOut();
+        await this.permissionService.redirectToAttendance();
+        resolve(false);
       }
     });
   }

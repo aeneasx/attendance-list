@@ -20,7 +20,7 @@
                 <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">Verzeichnis</p>
             </div>
         </mat-card>
-        <mat-card matRipple>
+        <mat-card matRipple *ngIf="canUseApps" (click)="openBfa()">
             <div>
                 <div style="width: fit-content; margin: 0 auto;">
                     <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"
@@ -29,7 +29,7 @@
                 <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">BFA</p>
             </div>
         </mat-card>
-        <mat-card matRipple>
+        <mat-card matRipple *ngIf="canUseApps" (click)="openFischmarkt()">
             <div>
                 <div style="width: fit-content; margin: 0 auto;">
                     <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"

@@ -5,3 +5,14 @@
     column-gap: 1rem;
     row-gap: 1rem;
   }
+
+mat-card {
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .grid-wrapper {
+    grid-template-columns: 1fr;
+    margin-top: 1.5rem;
+  }
+}

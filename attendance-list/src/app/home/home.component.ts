@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { PermissionService } from '../services/permission.service';
 
 @Component({
   selector: 'app-home',
@@ -7,9 +8,20 @@ import { Component, OnInit } from '@angular/core';
 })
 export class HomeComponent implements OnInit {
 
-  constructor() { }
+  canUseApps = false;
 
-  ngOnInit(): void {
+  constructor(private permissionService: PermissionService) { }
+
+  async ngOnInit(): Promise<void> {
+    this.canUseApps = await this.permissionService.canUseApps();
+  }
+
+  openBfa() {
+    this.permissionService.openBfa();
+  }
+
+  openFischmarkt() {
+    this.permissionService.openFischmarkt();
   }
 
 }

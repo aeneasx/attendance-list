@@ -2,9 +2,9 @@ import { Component } from '@angular/core';
 import { AlertController, Platform } from '@ionic/angular';
 import { BasketService } from '../services/basket.service';
 import { ProductService } from '../services/product.service';
-import { UserService } from '../services/user.service';
 import * as Parse from 'parse';
 import { environment } from 'src/environments/environment';
+import { PermissionService } from '../services/permission.service';
 
 @Component({
   selector: 'app-tab1',
@@ -25,17 +25,14 @@ export class Tab1Page {
   constructor(public productService: ProductService,
     public basketService: BasketService,
     public alertController: AlertController,
-    public platform: Platform) {
+    public platform: Platform,
+    private permissionService: PermissionService) {
     this.ios = platform.is('ios');
     this.android = platform.is('android');
     this.products = productService.allProducts;
     this.searchString = '';
     this.filterProducts();
-    Promise.all([
-      UserService.isUserInRole(Parse.User.current(), 'admin'),
-      UserService.isUserInRole(Parse.User.current(), 'user'),
-      UserService.isUserInRole(Parse.User.current(), 'bfa-admin')
-    ]).then(([isAdmin, isUser, isBfaAdmin]) => this.isBfaAdmin = isAdmin || isUser || isBfaAdmin);
+    this.permissionService.canManageBfa().then(x => this.isBfaAdmin = x);
   }
 
   filterProducts() {

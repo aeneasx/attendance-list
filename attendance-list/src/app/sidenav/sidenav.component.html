@@ -27,12 +27,12 @@
         <div matListItemTitle>Karte</div>
     </mat-list-item>
 
-    <mat-list-item *ngIf="isBFAUser" matRipple (click)="openBfa()">
+    <mat-list-item *ngIf="canUseApps" matRipple (click)="openBfa()">
         <mat-icon matListItemIcon>icecream</mat-icon>
         <div matListItemTitle>BFA</div>
     </mat-list-item>
     
-    <mat-list-item *ngIf="isFmUser" matRipple (click)="openFischmarkt()">
+    <mat-list-item *ngIf="canUseApps" matRipple (click)="openFischmarkt()">
         <mat-icon matListItemIcon>sailing</mat-icon>
         <div matListItemTitle>Fischmarkt</div>
     </mat-list-item>

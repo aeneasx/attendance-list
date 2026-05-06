@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button (click)="openAttendanceList()">
+      <ion-button (click)="openAttendanceList()" aria-label="Zur Attendance List">
         <ion-icon slot="start" name="arrow-back-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -10,10 +10,10 @@
     </ion-title>
     
     <ion-buttons slot="end">
-      <ion-button (click)="openReglement()">
+      <ion-button (click)="openReglement()" aria-label="Reglement öffnen">
         <ion-icon slot="end" name="information-circle-outline"></ion-icon>
       </ion-button>
-      <ion-button routerLink="/ranking">
+      <ion-button routerLink="/ranking" aria-label="Rangliste öffnen">
         <ion-icon slot="end" name="stats-chart-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
