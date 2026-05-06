@@ -30,9 +30,10 @@
                     [ngStyle]="{'background-image': 'url(' + item.user.get('profilePicture').url() + ')'}"
                     class="list-image"></div>
                 <div matListItemTitle>{{item.user.attributes.grad}} {{item.user.attributes.lastname}}</div>
-                <div matListItemLine> <span [ngStyle]="{'color': item.status.attributes.color}"
+                <div matListItemLine *ngIf="item.status"> <span [ngStyle]="{'color': item.status.attributes.color}"
                         class="statusColor">●</span>
                     {{item.status.attributes.status_string}} </div>
+                <div matListItemLine *ngIf="!item.status">Kein Status</div>
             </mat-list-item>
             <mat-divider *ngIf="!$last"></mat-divider>
             }

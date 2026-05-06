@@ -56,6 +56,8 @@ export class UserService {
     this.userQuery.find().then(users => {
       this.resultMapper(users, this.status);
       this.mapUserStatus(users);
+    }).catch(err => {
+      console.error('Failed to load user data', err);
     });
   }
 
@@ -82,7 +84,7 @@ export class UserService {
         let stvData: TreeNode;
         deptData.name = dept.attributes.department;
         userList.forEach(user => {
-          if (dept.id === user.attributes.department.id) {
+          if (user.attributes.department && dept.id === user.attributes.department.id) {
             tempData = { name: null, children: [] };
             stvData = { name: null, children: [] };
             stv = user.attributes.stv ? user.attributes.stv.attributes : null;
@@ -139,7 +141,7 @@ export class UserService {
   }
 
   getStatusForUser(user: any) {
-    if (this.status) {
+    if (this.status && user?.attributes?.status) {
       return this.status.find(x => user.attributes.status.id === x.id);
     }
     return null;

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserService } from '../services/user.service';
@@ -15,7 +15,7 @@ import * as L from 'leaflet';
   templateUrl: './public-profile.component.html',
   styleUrls: ['./public-profile.component.scss']
 })
-export class PublicProfileComponent implements OnInit {
+export class PublicProfileComponent implements OnInit, OnDestroy {
 
   currentUserStatus: UserStatus;
   stv: any;
@@ -25,9 +25,10 @@ export class PublicProfileComponent implements OnInit {
   allStatus: any[];
   latestLocation: any;
   locationUrl: any;
+  private map?: L.Map;
 
   @ViewChild('lMap') mapElRef: ElementRef;
-  hideLocation: boolean;
+  hideLocation = true;
   userRoles?: string[];
 
   constructor(private route: ActivatedRoute,
@@ -36,11 +37,17 @@ export class PublicProfileComponent implements OnInit {
     private router: Router,
     private departmentService: DepartmentService,
     private statusService: StatusService,
-    private readonly geoService: GeolocationService) { }
+    private readonly geoService: GeolocationService,
+    private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.route.params.subscribe(async params => {
       try {
+        this.currentUserStatus = null;
+        this.latestLocation = null;
+        this.hideLocation = true;
+        this.destroyMap();
+
         const currentLoggedInUser = await Parse.User.current().fetch();
         this.userService.allUserStatus.subscribe(async data => {
           if (data) {
@@ -95,13 +102,23 @@ export class PublicProfileComponent implements OnInit {
       this.hideLocation = true;
       return;
     }
+    this.hideLocation = false;
+    this.cdr.detectChanges();
+    setTimeout(() => this.renderLocationMap());
+  }
+
+  private renderLocationMap() {
+    if (!this.mapElRef?.nativeElement || !this.latestLocation) {
+      return;
+    }
+    this.destroyMap();
 
     var mapOptions = {
       center: [this.latestLocation.get('latitude'), this.latestLocation.get('longitude')],
       zoom: 15
     };
     // Creating a map object
-    const map = new L.map(this.mapElRef.nativeElement, mapOptions);
+    this.map = new L.map(this.mapElRef.nativeElement, mapOptions);
 
     // Creating a Layer object
     const layer = new L.TileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -115,10 +132,21 @@ export class PublicProfileComponent implements OnInit {
       popupAnchor: [-3, -76] // point from which the popup should open relative to the iconAnchor
     });
 
-    L.marker([this.latestLocation.get('latitude'), this.latestLocation.get('longitude')], { icon: markerIcon }).addTo(map);
+    L.marker([this.latestLocation.get('latitude'), this.latestLocation.get('longitude')], { icon: markerIcon }).addTo(this.map);
 
     // Adding layer to the map
-    map.addLayer(layer);
+    this.map.addLayer(layer);
+  }
+
+  private destroyMap() {
+    if (this.map) {
+      this.map.remove();
+      this.map = undefined;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyMap();
   }
 
 
