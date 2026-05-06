@@ -2,14 +2,14 @@
 <div *ngIf="dataSource && dataSource.data" class="loaderPlaceholder"></div>
 
 <div class="quick-links" *ngIf="canUseApps">
-  <button mat-stroked-button color="primary" (click)="openBfa()">
+  <a mat-stroked-button color="primary" *ngIf="bfaUrl" [href]="bfaUrl">
     <mat-icon>icecream</mat-icon>
     BFA
-  </button>
-  <button mat-stroked-button color="primary" (click)="openFischmarkt()">
+  </a>
+  <a mat-stroked-button color="primary" *ngIf="fischmarktUrl" [href]="fischmarktUrl">
     <mat-icon>sailing</mat-icon>
     Fischmarkt
-  </button>
+  </a>
 </div>
 
 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">

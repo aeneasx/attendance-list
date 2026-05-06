@@ -10,11 +10,14 @@ export type AccessLevel = 'admin' | 'user' | 'client' | 'none';
 })
 export class PermissionService {
 
+  private readonly bfaAuthFallbackUrl = 'https://bfa.spitbat75.ch/login?token=';
+  private readonly fischmarktAuthFallbackUrl = 'https://fischmarkt.spitbat75.ch/login?token=';
+
   readonly appAccessRoles = [UserRoles.admin, UserRoles.user, UserRoles.client];
   readonly editorRoles = [UserRoles.admin, UserRoles.user];
 
   async currentUser() {
-    return await Parse.User.current()?.fetch();
+    return Parse.User.current();
   }
 
   async hasRole(roleName: string, user = Parse.User.current()) {
@@ -78,22 +81,56 @@ export class PermissionService {
   }
 
   async openBfa() {
-    const currentUser = await this.currentUser();
-    if (!currentUser) {
+    const url = this.getBfaAuthUrl();
+    if (!url) {
       return;
     }
-    window.location.assign(environment.bfaAuthUrl + currentUser.getSessionToken());
+    window.location.assign(url);
   }
 
   async openFischmarkt() {
-    const currentUser = await this.currentUser();
-    if (!currentUser) {
+    const url = this.getFischmarktAuthUrl();
+    if (!url) {
       return;
     }
-    window.location.assign(environment.fischmarktAuthUrl + currentUser.getSessionToken());
+    window.location.assign(url);
+  }
+
+  getBfaAuthUrl() {
+    return this.buildExternalAuthUrl(environment.bfaAuthUrl, this.bfaAuthFallbackUrl);
+  }
+
+  getFischmarktAuthUrl() {
+    return this.buildExternalAuthUrl(environment.fischmarktAuthUrl, this.fischmarktAuthFallbackUrl);
   }
 
   buildAttendanceUrl(path: string) {
     return `${environment.attendanceListBasePath.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  }
+
+  private buildExternalAuthUrl(configuredUrl: string, fallbackUrl: string) {
+    const sessionToken = Parse.User.current()?.getSessionToken();
+    if (!sessionToken) {
+      console.error('Keine aktive Session gefunden. Externe App kann nicht geöffnet werden.');
+      return null;
+    }
+
+    const authUrl = this.resolveExternalAuthUrl(configuredUrl, fallbackUrl);
+    return `${authUrl}${encodeURIComponent(sessionToken)}`;
+  }
+
+  private resolveExternalAuthUrl(configuredUrl: string, fallbackUrl: string) {
+    const url = configuredUrl && configuredUrl !== 'undefined' ? configuredUrl : fallbackUrl;
+
+    if (url.startsWith('/')) {
+      const isProductionDomain = location.hostname === 'spitbat75.ch' || location.hostname.endsWith('.spitbat75.ch');
+      if (isProductionDomain) {
+        return fallbackUrl;
+      }
+
+      return `${location.protocol}//${location.host}${url}`;
+    }
+
+    return url;
   }
 }

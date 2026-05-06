@@ -9,11 +9,15 @@ import { PermissionService } from '../services/permission.service';
 export class HomeComponent implements OnInit {
 
   canUseApps = false;
+  bfaUrl: string;
+  fischmarktUrl: string;
 
   constructor(private permissionService: PermissionService) { }
 
   async ngOnInit(): Promise<void> {
     this.canUseApps = await this.permissionService.canUseApps();
+    this.bfaUrl = this.permissionService.getBfaAuthUrl();
+    this.fischmarktUrl = this.permissionService.getFischmarktAuthUrl();
   }
 
   openBfa() {

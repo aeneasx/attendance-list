@@ -20,23 +20,27 @@
                 <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">Verzeichnis</p>
             </div>
         </mat-card>
-        <mat-card matRipple *ngIf="canUseApps" (click)="openBfa()">
-            <div>
-                <div style="width: fit-content; margin: 0 auto;">
-                    <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"
-                        aria-label="Example home icon" fontIcon="icecream"></mat-icon>
+        <a class="app-card-link" *ngIf="canUseApps && bfaUrl" [href]="bfaUrl">
+            <mat-card matRipple>
+                <div>
+                    <div style="width: fit-content; margin: 0 auto;">
+                        <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"
+                            aria-label="Example home icon" fontIcon="icecream"></mat-icon>
+                    </div>
+                    <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">BFA</p>
                 </div>
-                <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">BFA</p>
-            </div>
-        </mat-card>
-        <mat-card matRipple *ngIf="canUseApps" (click)="openFischmarkt()">
-            <div>
-                <div style="width: fit-content; margin: 0 auto;">
-                    <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"
-                        aria-label="Example home icon" fontIcon="sailing"></mat-icon>
+            </mat-card>
+        </a>
+        <a class="app-card-link" *ngIf="canUseApps && fischmarktUrl" [href]="fischmarktUrl">
+            <mat-card matRipple>
+                <div>
+                    <div style="width: fit-content; margin: 0 auto;">
+                        <mat-icon style="font-size: 50px; width: 50px; height: 50px;" aria-hidden="false"
+                            aria-label="Example home icon" fontIcon="sailing"></mat-icon>
+                    </div>
+                    <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">Fischmarkt</p>
                 </div>
-                <p style="font-weight: bold; font-size: 16px; text-align: center; margin: 0;">Fischmarkt</p>
-            </div>
-        </mat-card>
+            </mat-card>
+        </a>
     </div>
 </div>

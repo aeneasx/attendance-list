@@ -18,6 +18,8 @@ export class SidenavComponent implements OnInit {
   isAdmin: boolean;
   canUseApps = false;
   isGeoLocationUser = false;
+  bfaUrl: string;
+  fischmarktUrl: string;
 
   constructor(private userService: UserService,
     private permissionService: PermissionService) { }
@@ -33,6 +35,8 @@ export class SidenavComponent implements OnInit {
       this.isAdmin = isAdmin;
       this.canUseApps = canUseApps;
       this.isGeoLocationUser = isGeoLocationUser;
+      this.bfaUrl = this.permissionService.getBfaAuthUrl();
+      this.fischmarktUrl = this.permissionService.getFischmarktAuthUrl();
     } catch (error) {
       console.error(error);
     }

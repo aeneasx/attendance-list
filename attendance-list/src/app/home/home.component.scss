@@ -10,6 +10,11 @@ mat-card {
   cursor: pointer;
 }
 
+.app-card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
 @media (max-width: 520px) {
   .grid-wrapper {
     grid-template-columns: 1fr;

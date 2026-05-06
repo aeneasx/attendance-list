@@ -36,6 +36,8 @@ export class UserListComponent {
   treeControl = new NestedTreeControl<TreeNode>(node => node.children);
   dataSource = new MatTreeNestedDataSource<TreeNode>();
   canUseApps = false;
+  bfaUrl: string;
+  fischmarktUrl: string;
 
   constructor(private userService: UserService,
     private permissionService: PermissionService) {
@@ -44,6 +46,8 @@ export class UserListComponent {
       this.dataSource.data = data;
     });
     this.permissionService.canUseApps().then(x => this.canUseApps = x);
+    this.bfaUrl = this.permissionService.getBfaAuthUrl();
+    this.fischmarktUrl = this.permissionService.getFischmarktAuthUrl();
   }
 
   hasChild = (_: number, node: TreeNode) => !!node.children && node.children.length > 0;
