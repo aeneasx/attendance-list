@@ -25,6 +25,31 @@ Parse.Cloud.define('getAssignableRoles', async request => {
   return roles.map(role => role.get('name'));
 });
 
+Parse.Cloud.define('bootstrapPermissions', async request => {
+  const roles = ['admin', 'user', 'client'];
+  for (const roleName of roles) {
+    await ensureRole(roleName);
+  }
+
+  const userQuery = new Parse.Query('_User');
+  userQuery.ascending('createdAt');
+  const users = await userQuery.find({ useMasterKey: true });
+  const adminUser = request.user || users.find(user => user.get('username') === 'admin') || users[0];
+  if (!adminUser) {
+    return { roles, adminUserId: null };
+  }
+
+  const hasAnyRole = await isUserIdInRole(adminUser.id, 'admin') ||
+    await isUserIdInRole(adminUser.id, 'user') ||
+    await isUserIdInRole(adminUser.id, 'client');
+
+  if (!hasAnyRole || adminUser.get('username') === 'admin') {
+    await addUser2Role('admin', adminUser);
+  }
+
+  return { roles, adminUserId: adminUser.id };
+});
+
 Parse.Cloud.define('addUserToRole', async request => {
   const roleName = request.params.roleName;
   const userId = request.params.userId;
@@ -308,6 +333,14 @@ function groupFishies(xs, key) {
 }
 
 async function addUser2Role(roleName, userObject) {
+  const userRole = await ensureRole(roleName);
+
+  const relation = userRole.relation('users');
+  relation.add(userObject);
+  await userRole.save(null, { useMasterKey: true });
+}
+
+async function ensureRole(roleName) {
   const query = new Parse.Query('_Role');
   query.equalTo('name', roleName);
   let userRole = await query.first({ useMasterKey: true });
@@ -320,10 +353,7 @@ async function addUser2Role(roleName, userObject) {
     userRole = new Parse.Role(roleName, acl);
     await userRole.save(null, { useMasterKey: true });
   }
-
-  const relation = userRole.relation('users');
-  relation.add(userObject);
-  await userRole.save(null, { useMasterKey: true });
+  return userRole;
 }
 
 async function removeRoleFromUser(roleName, userObject) {

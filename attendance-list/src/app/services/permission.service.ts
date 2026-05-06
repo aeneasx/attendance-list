@@ -73,6 +73,10 @@ export class PermissionService {
     return await this.hasRole(UserRoles.admin, user);
   }
 
+  async bootstrapPermissions() {
+    return await Parse.Cloud.run('bootstrapPermissions');
+  }
+
   async openBfa() {
     const currentUser = await this.currentUser();
     if (!currentUser) {

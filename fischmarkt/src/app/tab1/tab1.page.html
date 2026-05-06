@@ -31,6 +31,9 @@
     <h1>{{antraegeService.userPoints}} Punkte</h1>
   </div>
 
+  <app-explore-container *ngIf="groupFishNames && groupFishNames.length === 0"
+    name="Dein Aquarium ist noch leer. Erstelle im Tab Anträge deinen ersten Antrag."></app-explore-container>
+
   <ion-grid *ngIf="groupedFishes && groupFishNames">
     <ion-row>
       <ion-col *ngFor="let fishId of groupFishNames" size="6">

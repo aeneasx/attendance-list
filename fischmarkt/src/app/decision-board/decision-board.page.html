@@ -5,6 +5,8 @@
 </ion-header-->
 
 <ion-content>
+  <app-explore-container *ngIf="!currentAntrag" name="Zurzeit gibt es keine offenen Anträge."></app-explore-container>
+
   <div *ngIf="currentAntrag">
     <div class="aligncenter" *ngIf="currentAntrag.get('fishType')?.get('image')">
       <div class="profilePicture"

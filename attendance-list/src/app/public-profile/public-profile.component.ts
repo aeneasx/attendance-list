@@ -32,6 +32,7 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
   hideLocation = true;
   userRoles?: string[];
   assignableRoles: string[] = [];
+  canBootstrapPermissions = false;
   accessLevels = [
     {
       role: UserRoles.admin,
@@ -95,6 +96,9 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
 
             this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
             this.assignableRoles = await Parse.Cloud.run('getAssignableRoles');
+            this.canBootstrapPermissions = this.profileIsfromCurrentUser &&
+              this.assignableRoles.length === 0 &&
+              (!this.userRoles || this.userRoles.length === 0);
 
             await this.initLocationMap();
           }
@@ -406,6 +410,24 @@ export class PublicProfileComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error(err);
       this.snackbar.open('Zugriffslevel konnte nicht aktualisiert werden.', null, {
+        duration: 3000
+      });
+    }
+  }
+
+  async bootstrapPermissions() {
+    try {
+      await this.permissionService.bootstrapPermissions();
+      this.assignableRoles = await Parse.Cloud.run('getAssignableRoles');
+      this.userRoles = await Parse.Cloud.run('getRolesFromUser', { userId: this.currentUserStatus.user.id });
+      this.isAdmin = await this.permissionService.canAdmin();
+      this.canBootstrapPermissions = false;
+      this.snackbar.open('Rollen wurden initialisiert.', null, {
+        duration: 2500
+      });
+    } catch (err) {
+      console.error(err);
+      this.snackbar.open('Rollen konnten nicht initialisiert werden.', null, {
         duration: 3000
       });
     }

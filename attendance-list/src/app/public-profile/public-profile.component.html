@@ -82,10 +82,17 @@
         </mat-card>
     </div>
 
-    <mat-card *ngIf="isAdmin && userRoles">
+    <mat-card *ngIf="(isAdmin || canBootstrapPermissions) && userRoles">
         <mat-list role="list">
             <div mat-subheader>Zugriffslevel</div>
+            <mat-list-item *ngIf="canBootstrapPermissions">
+                <mat-icon matListItemIcon>build</mat-icon>
+                <div matListItemTitle>Rollen initialisieren</div>
+                <div matListItemLine>Legt admin, user und client an und weist dem Admin-Konto Vollzugriff zu.</div>
+                <button mat-stroked-button color="primary" (click)="bootstrapPermissions()">Initialisieren</button>
+            </mat-list-item>
 
+            <ng-container *ngIf="isAdmin">
             @for (level of accessLevels; track level.role) {
             <mat-list-item>
                 <mat-icon matListItemIcon>{{level.icon}}</mat-icon>
@@ -98,6 +105,7 @@
                 <mat-icon *ngIf="hasRole(level.role)" color="primary">check</mat-icon>
             </mat-list-item>
             }
+            </ng-container>
         </mat-list>
     </mat-card>
 

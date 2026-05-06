@@ -37,6 +37,8 @@
   </ion-header>
 
   <ion-list *ngIf="filteredProducts">
+    <empty-placeholder *ngIf="filteredProducts.length === 0"
+      text="Noch keine Produkte vorhanden."></empty-placeholder>
     <ion-item-sliding *ngFor="let item of filteredProducts">
       <ion-item (click)="basketService.additem2Basket(item)">
         <ion-label>{{item.attributes.name}}</ion-label>
