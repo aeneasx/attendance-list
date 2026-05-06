@@ -16,11 +16,7 @@ export class AppComponent {
       this.showLoader = true;
 
       Parse.initialize(environment.parseAppId);
-      let parseServerUrl = environment.parseServerUrl;
-      if (parseServerUrl.startsWith('/')) {
-        parseServerUrl = location.protocol + '//' + location.host + parseServerUrl;
-      }
-      (Parse as any).serverURL = parseServerUrl;
+      (Parse as any).serverURL = this.resolveParseServerUrl(environment.parseServerUrl);
     } catch (ex) {
       alert('Ein unerwarteter fehler ist aufgetreten.');
       console.error(ex);
@@ -28,6 +24,18 @@ export class AppComponent {
     }
 
     this.ngOnInit();
+  }
+
+  private resolveParseServerUrl(parseServerUrl: string): string {
+    if (!parseServerUrl.startsWith('/')) {
+      return parseServerUrl;
+    }
+
+    if (location.hostname.endsWith('spitbat75.ch') && location.hostname !== 'api.spitbat75.ch') {
+      return `https://api.spitbat75.ch${parseServerUrl}`;
+    }
+
+    return `${location.protocol}//${location.host}${parseServerUrl}`;
   }
 
   async ngOnInit() {
